@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect(MONGO_URL);
 
-app.use(requestLogger); // подключаем логгер запросов
+app.use(requestLogger);
 app.use(limiter);
 app.use(helmet());
 
