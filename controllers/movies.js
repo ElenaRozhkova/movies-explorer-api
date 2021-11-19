@@ -60,6 +60,7 @@ module.exports.deleteMovie = (req, res, next) => {
       if (err.name === 'CastError') {
         throw new ValidationError('Переданы некорректные данные');
       }
+      throw err;
     })
     .catch(next);
 };

@@ -12,21 +12,15 @@ const {
 } = require('../utils/error.js');
 
 module.exports.login = (req, res, next) => {
-  const data = { ...req.body };
-  User.findOne({ email: data.email }).select('+password')
+  const { email, password } = req.body;
+  return User.findUserByCredentials(email, password)
     .then((user) => {
-      if (user) {
-        bcrypt.compare(data.password, user.password)
-          .then((matched) => {
-            if (!matched) next(new UnauthorizedError('Передан неверный логин или пароль'));
-            else {
-              const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-              // вернём токен
-              res.status(200).send({ token });
-            }
-          });
-      } else next(new UnauthorizedError('Передан неверный логин или пароль'));
+      // создадим токен
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+      // вернём токен
+      res.send({ token });
     })
+    .catch(() => { throw new UnauthorizedError('Передан неверный логин или пароль.'); })
     .catch(next);
 };
 
@@ -40,7 +34,7 @@ module.exports.createUser = (req, res, next) => {
     }))
     .then((user) => res.status(STATUS_CREATE).send({
       data: {
-        email: user.email, password: user.password, name: user.name,
+        email: user.email, name: user.name,
       },
     }))
     .catch((err) => {
@@ -60,8 +54,13 @@ module.exports.getUser = (req, res, next) => {
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Пользователь по указанному _id не найден');
+      } else { res.status(STATUS_OK).send(user); }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        throw new ValidationError('Переданы некорректные данные');
       }
-      return res.status(STATUS_OK).send(user);
+      return next(err);
     })
     .catch(next);
 };
