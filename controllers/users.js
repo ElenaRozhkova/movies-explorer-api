@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs'); // импортируем bcrypt
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found.js');
 const UnauthorizedError = require('../errors/unauthorized-error.js');
-const DublikateError = require('../errors/dublikate-error.js');
+const ConflictError = require('../errors/conflict-error.js');
 const ValidationError = require('../errors/validation-error.js');
 const { JWT_SECRET } = require('../config');
 
@@ -42,7 +42,7 @@ module.exports.createUser = (req, res, next) => {
         return next(new ValidationError('Переданы некорректные данные при создании пользователя'));
       }
       if (err.name === 'MongoServerError' && err.code === 11000) {
-        return next(new DublikateError('Пользователь с указанным email уже существует'));
+        return next(new ConflictError('Пользователь с указанным email уже существует'));
       }
       return next(err);
     });
@@ -74,7 +74,7 @@ module.exports.updateUser = (req, res, next) => {
         return next(new ValidationError('Переданы некорректные данные при обновлении профиля.'));
       }
       if (err.code === 11000) {
-        return next(new DublikateError('Переданный email уже используется другим пользователем.'));
+        return next(new ConflictError('Переданный email уже используется другим пользователем.'));
       }
       return next(err);
     });
